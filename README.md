@@ -6,36 +6,21 @@ Manage a product catalogue, reserve stock through multi-line orders, cancel orde
 
 ![StockBridge dashboard](docs/images/dashboard.png)
 
-## Start here
+## Work entirely online
 
-- **Preferred: work online without installing Mac software.** Follow [the browser-only Codespaces guide](docs/08-online-only.md). Java and builds run in the cloud. Verified in GitHub Codespaces with Java 17: all 19 tests passed.
-- **New to coding?** Open [START-HERE.html](START-HERE.html) in your browser. The source files are already in their correct folders.
-- **On this Mac:** double-click `START-STOCKBRIDGE.command`. Keep its Terminal window open. It opens [the dashboard](http://localhost:8080).
-- **Run tests on this Mac:** double-click `RUN-TESTS.command`.
-- **GitHub instructions:** [the beginner guide](docs/05-github-guide.md).
-- **Demonstration:** [the demo script](docs/04-demo.md).
+No Java, Maven, Docker or GitHub Desktop installation on your Mac is required. Java, the build and the application run in GitHub Codespaces.
 
-The Mac helpers prepare verified Java 17 and Maven downloads inside the ignored `.tools/` folder. They do not need Homebrew or a global Java installation. First use on a fresh computer needs internet access. The Mac route is optional; Codespaces needs no local software installation.
+1. Follow [the browser-only guide](docs/08-online-only.md).
+2. Run `bash scripts/run-online.sh` in the cloud terminal.
+3. Open the Ports tab and choose Open in Browser for port 8080. Keep visibility Private.
+4. Run `bash mvnw --batch-mode clean verify` for tests.
+5. Stop the Codespace when finished and reuse it next time.
 
-## Developer quick start
+**All 19 tests passed in GitHub Codespaces with Java 17.** See [cloud evidence](docs/evidence/cloud-build-summary.txt).
 
-With Java 17 or later installed:
+[Analysis](docs/01-analysis.md) · [Design](docs/02-design.md) · [Demo script](docs/04-demo.md) · [Results](docs/06-results.md)
 
-```sh
-# macOS/Linux
-./mvnw clean verify
-./mvnw spring-boot:run
-```
-
-```powershell
-# Windows PowerShell
-.\mvnw.cmd clean verify
-.\mvnw.cmd spring-boot:run
-```
-
-Dashboard: `http://localhost:8080` · SOAP endpoint: `http://localhost:8080/ws` · WSDL: `http://localhost:8080/ws/inventory.wsdl`
-
-The application binds to loopback by default and stores its database in `data/stockbridge.mv.db`. Stop the app with Control+C. Restarting preserves products, orders and movement history. Tests use an isolated in-memory database and do not erase demo data.
+The database is saved in the workspace data folder and is not committed. The Mac helper scripts are optional legacy conveniences and are not needed for this online workflow.
 
 ## What is implemented
 
