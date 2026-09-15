@@ -1,0 +1,20 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tns="https://stockbridge.example/inventory/v1" targetNamespace="https://stockbridge.example/inventory/v1" elementFormDefault="qualified">
+<xs:complexType name="product"><xs:sequence><xs:element name="sku" type="xs:string" /><xs:element name="name" type="xs:string" /><xs:element name="category" type="xs:string" /><xs:element name="price" type="xs:decimal" /><xs:element name="quantity" type="xs:int" /><xs:element name="reorderLevel" type="xs:int" /></xs:sequence></xs:complexType>
+<xs:complexType name="orderLine"><xs:sequence><xs:element name="sku" type="xs:string" /><xs:element name="name" type="xs:string" /><xs:element name="quantity" type="xs:int" /><xs:element name="unitPrice" type="xs:decimal" /></xs:sequence></xs:complexType>
+<xs:complexType name="order"><xs:sequence><xs:element name="id" type="xs:string" /><xs:element name="customer" type="xs:string" /><xs:element name="status" type="xs:string" /><xs:element name="total" type="xs:decimal" /><xs:element name="createdAt" type="xs:string" /><xs:element name="lines" type="tns:orderLine" minOccurs="1" maxOccurs="100"/></xs:sequence></xs:complexType>
+<xs:complexType name="lineInput"><xs:sequence><xs:element name="sku" type="xs:string" /><xs:element name="quantity" type="xs:int" /></xs:sequence></xs:complexType>
+<xs:element name="listProductsRequest"><xs:complexType><xs:sequence></xs:sequence></xs:complexType></xs:element>
+<xs:element name="listProductsResponse"><xs:complexType><xs:sequence><xs:element name="products" type="tns:product" minOccurs="0" maxOccurs="unbounded"/></xs:sequence></xs:complexType></xs:element>
+<xs:element name="getProductRequest"><xs:complexType><xs:sequence><xs:element name="sku" type="xs:string" /></xs:sequence></xs:complexType></xs:element>
+<xs:element name="getProductResponse"><xs:complexType><xs:sequence><xs:element name="product" type="tns:product" /></xs:sequence></xs:complexType></xs:element>
+<xs:element name="createProductRequest"><xs:complexType><xs:sequence><xs:element name="product" type="tns:product" /></xs:sequence></xs:complexType></xs:element>
+<xs:element name="createProductResponse"><xs:complexType><xs:sequence><xs:element name="product" type="tns:product" /></xs:sequence></xs:complexType></xs:element>
+<xs:element name="restockProductRequest"><xs:complexType><xs:sequence><xs:element name="sku" type="xs:string" /><xs:element name="quantity" type="xs:int" /></xs:sequence></xs:complexType></xs:element>
+<xs:element name="restockProductResponse"><xs:complexType><xs:sequence><xs:element name="product" type="tns:product" /></xs:sequence></xs:complexType></xs:element>
+<xs:element name="placeOrderRequest"><xs:complexType><xs:sequence><xs:element name="customer" type="xs:string" /><xs:element name="lines" type="tns:lineInput" minOccurs="1" maxOccurs="100"/></xs:sequence></xs:complexType></xs:element>
+<xs:element name="placeOrderResponse"><xs:complexType><xs:sequence><xs:element name="order" type="tns:order" /></xs:sequence></xs:complexType></xs:element>
+<xs:element name="getOrderRequest"><xs:complexType><xs:sequence><xs:element name="id" type="xs:string" /></xs:sequence></xs:complexType></xs:element>
+<xs:element name="getOrderResponse"><xs:complexType><xs:sequence><xs:element name="order" type="tns:order" /></xs:sequence></xs:complexType></xs:element>
+<xs:element name="cancelOrderRequest"><xs:complexType><xs:sequence><xs:element name="id" type="xs:string" /></xs:sequence></xs:complexType></xs:element>
+<xs:element name="cancelOrderResponse"><xs:complexType><xs:sequence><xs:element name="order" type="tns:order" /></xs:sequence></xs:complexType></xs:element>
+</xs:schema>

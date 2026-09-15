@@ -1,0 +1,28 @@
+name: Build and test StockBridge
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+      - name: Generate contract classes, test and package
+        run: bash mvnw --batch-mode clean verify
+      - name: Save test evidence and runnable application
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stockbridge-results
+          path: |
+            target/cucumber-report.html
+            target/cucumber-report.json
+            target/surefire-reports/
+            target/stockbridge-1.0.0.jar

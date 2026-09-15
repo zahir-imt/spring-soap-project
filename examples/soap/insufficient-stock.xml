@@ -1,0 +1,5 @@
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:inv="https://stockbridge.example/inventory/v1">
+  <soap:Body>
+    <inv:placeOrderRequest><inv:customer>Fault example</inv:customer><inv:lines><inv:sku>KB-101</inv:sku><inv:quantity>1000000</inv:quantity></inv:lines></inv:placeOrderRequest>
+  </soap:Body>
+</soap:Envelope>

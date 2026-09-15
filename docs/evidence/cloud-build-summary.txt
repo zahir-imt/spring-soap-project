@@ -1,0 +1,7 @@
+GitHub Codespaces / Linux / Microsoft OpenJDK 17.0.20.1 / Maven wrapper 3.9.11
+[INFO] Tests run: 14, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 7.214 s -- in com.example.springsoap.InventoryIntegrationTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.059 s -- in com.example.springsoap.bdd.RunCucumberTest
+[INFO] Tests run: 19, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+[INFO] Total time:  18.182 s
+[INFO] Finished at: 2026-09-15T21:37:54Z

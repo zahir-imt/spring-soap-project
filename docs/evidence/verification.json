@@ -1,0 +1,43 @@
+{
+  "date": "2026-09-15",
+  "environment": "macOS arm64, Temurin Java 17.0.20.1, Maven 3.9.11, Spring Boot 3.5.16",
+  "command": "mvn clean verify",
+  "result": "BUILD SUCCESS",
+  "suites": [
+    {
+      "suite": "com.example.springsoap.InventoryIntegrationTest",
+      "tests": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "com.example.springsoap.bdd.RunCucumberTest",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "persistence": {
+    "result": "PASS",
+    "sku": "DS-707",
+    "quantityBefore": 12,
+    "quantityAfter": 12
+  },
+  "browserChecks": [
+    "Create product DS-707, 12 units, CAD 45.00",
+    "Place 2-unit KB-101 order: stock 42 to 40, total CAD 178.00",
+    "Cancel order: stock restored to 42",
+    "SOAP list products: HTTP 200 with product records",
+    "SOAP missing product: HTTP 500 with NOT_FOUND detail",
+    "Reload after process restart: saved product and cancelled order retained"
+  ],
+  "notExecuted": [
+    "GitHub-hosted Actions",
+    "Windows/Intel Mac launcher",
+    "Production deployment",
+    "Mobile browser interactions",
+    "External demo WSDL integration"
+  ]
+}

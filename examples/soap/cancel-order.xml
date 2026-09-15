@@ -1,0 +1,5 @@
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:inv="https://stockbridge.example/inventory/v1">
+  <soap:Body>
+    <inv:cancelOrderRequest><inv:id>REPLACE_WITH_ORDER_ID</inv:id></inv:cancelOrderRequest>
+  </soap:Body>
+</soap:Envelope>

@@ -6,7 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class SpringSoapProjectApplication {
 
-    public static void main(String[] args) {
-        SpringApplication.run(SpringSoapProjectApplication.class, args);
-    }
+  public static void main(String[] args) {
+    SpringApplication.run(SpringSoapProjectApplication.class, args);
+  }
 }
