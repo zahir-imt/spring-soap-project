@@ -1,5 +1,5 @@
 {
-  "name": "StockBridge · Java 17",
+  "name": "StockBridge \u00b7 Java 17",
   "image": "mcr.microsoft.com/devcontainers/base:bookworm",
   "features": {
     "ghcr.io/devcontainers/features/java:1": {
@@ -8,7 +8,9 @@
       "installGradle": "false"
     }
   },
-  "forwardPorts": [8080],
+  "forwardPorts": [
+    8080
+  ],
   "portsAttributes": {
     "8080": {
       "label": "StockBridge dashboard",
@@ -16,5 +18,5 @@
       "protocol": "http"
     }
   },
-  "postCreateCommand": "bash mvnw --batch-mode -DskipTests package"
+  "postCreateCommand": "sudo apt-get update -qq && sudo apt-get install -y -qq git-lfs && bash mvnw --batch-mode -DskipTests package"
 }
