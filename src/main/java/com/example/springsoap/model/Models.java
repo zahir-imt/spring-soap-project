@@ -20,7 +20,11 @@ public final class Models {
 
   public record LineRequest(String sku, Integer quantity) {}
 
-  public record NewOrder(String customer, List<LineRequest> lines) {}
+  public record NewOrder(String customer, List<LineRequest> lines, String requestId) {
+    public NewOrder(String customer, List<LineRequest> lines) {
+      this(customer, lines, java.util.UUID.randomUUID().toString());
+    }
+  }
 
   public record OrderLine(String sku, String name, int quantity, BigDecimal unitPrice) {}
 

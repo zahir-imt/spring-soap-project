@@ -131,6 +131,10 @@ public class InventoryService {
       require(!quantities.containsKey(key), "Combine duplicate SKUs into one line.");
       quantities.put(key, number(l.quantity(), "Order quantity", 1));
     }
+    String key = text(request.requestId(), "Request ID", 100);
+    String payload = customer.length() + ":" + customer + ":" + quantities;
+    String previous = repo.previousRequest(key, payload);
+    if (previous != null) return repo.order(previous, false);
     var lines = new ArrayList<OrderLine>();
     BigDecimal total = BigDecimal.ZERO;
     String id = UUID.randomUUID().toString();
@@ -147,6 +151,7 @@ public class InventoryService {
       total = total.add(p.price().multiply(BigDecimal.valueOf(count)));
     }
     repo.insertOrder(id, customer, total, lines);
+    repo.saveRequest(key, payload, id);
     return repo.order(id, false);
   }
 

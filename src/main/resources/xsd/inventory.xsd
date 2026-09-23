@@ -11,7 +11,7 @@
 <xs:element name="createProductResponse"><xs:complexType><xs:sequence><xs:element name="product" type="tns:product" /></xs:sequence></xs:complexType></xs:element>
 <xs:element name="restockProductRequest"><xs:complexType><xs:sequence><xs:element name="sku" type="xs:string" /><xs:element name="quantity" type="xs:int" /></xs:sequence></xs:complexType></xs:element>
 <xs:element name="restockProductResponse"><xs:complexType><xs:sequence><xs:element name="product" type="tns:product" /></xs:sequence></xs:complexType></xs:element>
-<xs:element name="placeOrderRequest"><xs:complexType><xs:sequence><xs:element name="customer" type="xs:string" /><xs:element name="lines" type="tns:lineInput" minOccurs="1" maxOccurs="100"/></xs:sequence></xs:complexType></xs:element>
+<xs:element name="placeOrderRequest"><xs:complexType><xs:sequence><xs:element name="requestId" type="xs:string" /><xs:element name="customer" type="xs:string" /><xs:element name="lines" type="tns:lineInput" minOccurs="1" maxOccurs="100"/></xs:sequence></xs:complexType></xs:element>
 <xs:element name="placeOrderResponse"><xs:complexType><xs:sequence><xs:element name="order" type="tns:order" /></xs:sequence></xs:complexType></xs:element>
 <xs:element name="getOrderRequest"><xs:complexType><xs:sequence><xs:element name="id" type="xs:string" /></xs:sequence></xs:complexType></xs:element>
 <xs:element name="getOrderResponse"><xs:complexType><xs:sequence><xs:element name="order" type="tns:order" /></xs:sequence></xs:complexType></xs:element>

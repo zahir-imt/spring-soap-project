@@ -1,0 +1,2 @@
+if(new URLSearchParams(location.search).has('error'))document.querySelector('#login-error').textContent='The username or password was not accepted.';
+fetch('/api/csrf').then(r=>{if(!r.ok)throw Error();return r.json();}).then(t=>{document.querySelector('#login-csrf').name=t.parameterName;document.querySelector('#login-csrf').value=t.token;document.querySelector('#login-button').disabled=false;}).catch(()=>document.querySelector('#login-error').textContent='Unable to connect. Reload to try again.');

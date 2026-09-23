@@ -1,3 +1,5 @@
+> **Version note:** This document describes the original baseline. StockBridge 1.1 adds required authentication/CSRF, request IDs for order placement, and purchasing. Follow [the upgrade guide](09-upgrade-guide.md) for current setup and interfaces.
+
 # 06 · Verified outcomes
 
 ## Executed local results — 15 September 2026

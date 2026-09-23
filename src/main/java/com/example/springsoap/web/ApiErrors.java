@@ -14,7 +14,7 @@ public class ApiErrors {
     int status =
         switch (e.getCode()) {
           case "NOT_FOUND" -> 404;
-          case "DUPLICATE_SKU", "INSUFFICIENT_STOCK" -> 409;
+          case "CONFLICT", "DUPLICATE_SKU", "INSUFFICIENT_STOCK" -> 409;
           default -> 400;
         };
     return ResponseEntity.status(status)

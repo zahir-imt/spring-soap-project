@@ -6,7 +6,7 @@ bash scripts/setup-mac.sh
 export JAVA_HOME="$PWD/.tools/jdk/Contents/Home"
 export PATH="$JAVA_HOME/bin:$PATH"
 APP_PORT=${PORT:-8080}
-if curl -fsS "http://127.0.0.1:$APP_PORT/api/summary" >/dev/null 2>&1; then
+if curl -fsS "http://127.0.0.1:$APP_PORT/login.html" >/dev/null 2>&1; then
   echo "An application is already running on port $APP_PORT. Opening it."
   open "http://localhost:$APP_PORT" 2>/dev/null || echo "Open your browser and visit http://localhost:$APP_PORT"
   exit 0
@@ -17,12 +17,13 @@ if [ ! -f target/stockbridge-1.0.0.jar ] || [ pom.xml -nt target/stockbridge-1.0
 fi
 echo "Starting StockBridge at http://localhost:$APP_PORT"
 echo "Keep this window open. Press Control+C to stop the application."
+source scripts/account-setup.sh
 java -jar target/stockbridge-1.0.0.jar &
 APP_PID=$!
 trap 'kill "$APP_PID" 2>/dev/null || true' EXIT
 trap 'exit 0' INT TERM
 for i in $(seq 1 60); do
-  if curl -fsS "http://127.0.0.1:$APP_PORT/api/summary" >/dev/null 2>&1; then
+  if curl -fsS "http://127.0.0.1:$APP_PORT/login.html" >/dev/null 2>&1; then
     open "http://localhost:$APP_PORT" 2>/dev/null || echo "Open your browser and visit http://localhost:$APP_PORT"
     wait "$APP_PID"
     exit 0
