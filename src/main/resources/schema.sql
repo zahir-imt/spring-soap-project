@@ -21,3 +21,28 @@ CREATE TABLE IF NOT EXISTS stock_movements (
  balance INT NOT NULL, reason VARCHAR(150) NOT NULL,
  created_at TIMESTAMP WITH TIME ZONE NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS app_users (
+ username VARCHAR(50) PRIMARY KEY, password VARCHAR(100) NOT NULL,
+ role VARCHAR(20) NOT NULL CHECK(role IN ('ADMIN','WAREHOUSE','SALES'))
+);
+CREATE TABLE IF NOT EXISTS order_request_lock (id INT PRIMARY KEY);
+INSERT INTO order_request_lock(id) SELECT 1 WHERE NOT EXISTS (SELECT 1 FROM order_request_lock WHERE id=1);
+CREATE TABLE IF NOT EXISTS order_requests (
+ request_id VARCHAR(100) PRIMARY KEY, payload CLOB NOT NULL,
+ order_id VARCHAR(36) NOT NULL REFERENCES customer_orders(id)
+);
+CREATE TABLE IF NOT EXISTS suppliers (
+ id VARCHAR(36) PRIMARY KEY, name VARCHAR(100) NOT NULL, email VARCHAR(254) NOT NULL
+);
+CREATE TABLE IF NOT EXISTS purchase_orders (
+ id VARCHAR(36) PRIMARY KEY, supplier_id VARCHAR(36) NOT NULL REFERENCES suppliers(id),
+ status VARCHAR(20) NOT NULL CHECK(status IN ('ORDERED','RECEIVED','CANCELLED')),
+ created_at TIMESTAMP WITH TIME ZONE NOT NULL, received_at TIMESTAMP WITH TIME ZONE,
+ total DECIMAL(18,2) NOT NULL
+);
+CREATE TABLE IF NOT EXISTS purchase_lines (
+ purchase_id VARCHAR(36) NOT NULL REFERENCES purchase_orders(id),
+ sku VARCHAR(32) NOT NULL REFERENCES products(sku), quantity INT NOT NULL CHECK(quantity>0),
+ unit_cost DECIMAL(12,2) NOT NULL CHECK(unit_cost>=0), PRIMARY KEY(purchase_id,sku)
+);

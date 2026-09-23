@@ -3,6 +3,7 @@ package com.example.springsoap.soap;
 import com.example.springsoap.contract.*;
 import com.example.springsoap.model.Models;
 import com.example.springsoap.service.InventoryService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.ws.server.endpoint.annotation.*;
 
 @Endpoint
@@ -61,6 +62,7 @@ public class InventoryEndpoint {
 
   @PayloadRoot(namespace = NS, localPart = "createProductRequest")
   @ResponsePayload
+  @PreAuthorize("hasAnyRole('ADMIN','WAREHOUSE')")
   public CreateProductResponse create(@RequestPayload CreateProductRequest request) {
     var p = request.getProduct();
     var r = new CreateProductResponse();
@@ -79,6 +81,7 @@ public class InventoryEndpoint {
 
   @PayloadRoot(namespace = NS, localPart = "restockProductRequest")
   @ResponsePayload
+  @PreAuthorize("hasAnyRole('ADMIN','WAREHOUSE')")
   public RestockProductResponse restock(@RequestPayload RestockProductRequest request) {
     var r = new RestockProductResponse();
     r.setProduct(product(service.restock(request.getSku(), request.getQuantity())));
@@ -87,6 +90,7 @@ public class InventoryEndpoint {
 
   @PayloadRoot(namespace = NS, localPart = "placeOrderRequest")
   @ResponsePayload
+  @PreAuthorize("hasAnyRole('ADMIN','SALES')")
   public PlaceOrderResponse place(@RequestPayload PlaceOrderRequest request) {
     var r = new PlaceOrderResponse();
     r.setOrder(
@@ -96,7 +100,8 @@ public class InventoryEndpoint {
                     request.getCustomer(),
                     request.getLines().stream()
                         .map(l -> new Models.LineRequest(l.getSku(), l.getQuantity()))
-                        .toList()))));
+                        .toList(),
+                    request.getRequestId()))));
     return r;
   }
 
@@ -110,6 +115,7 @@ public class InventoryEndpoint {
 
   @PayloadRoot(namespace = NS, localPart = "cancelOrderRequest")
   @ResponsePayload
+  @PreAuthorize("hasAnyRole('ADMIN','SALES')")
   public CancelOrderResponse cancel(@RequestPayload CancelOrderRequest request) {
     var r = new CancelOrderResponse();
     r.setOrder(order(service.cancel(request.getId())));

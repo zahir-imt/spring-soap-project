@@ -27,6 +27,11 @@ class InventoryIntegrationTest {
 
   @BeforeEach
   void clean() {
+    com.example.springsoap.AuthenticatedHttp.configure(http);
+    db.update("DELETE FROM order_requests");
+    db.update("DELETE FROM purchase_lines");
+    db.update("DELETE FROM purchase_orders");
+    db.update("DELETE FROM suppliers");
     db.update("DELETE FROM stock_movements");
     db.update("DELETE FROM order_lines");
     db.update("DELETE FROM customer_orders");
@@ -219,7 +224,9 @@ class InventoryIntegrationTest {
         .isEqualTo(200);
     var placed =
         soap(
-            "<i:placeOrderRequest><i:customer>SOAP"
+            "<i:placeOrderRequest><i:requestId>"
+                + java.util.UUID.randomUUID()
+                + "</i:requestId><i:customer>SOAP"
                 + " buyer</i:customer><i:lines><i:sku>SOAP</i:sku><i:quantity>3</i:quantity></i:lines></i:placeOrderRequest>");
     assertThat(placed.getStatusCode().value()).isEqualTo(200);
     assertThat(placed.getBody()).contains("15.75");
@@ -268,5 +275,60 @@ class InventoryIntegrationTest {
                 .getBody()
                 .status())
         .isEqualTo("CANCELLED");
+  }
+
+  @Test
+  void soapDuplicateRequestReservesOnlyOnce() {
+    product("SOAP-RETRY", 10);
+    String body =
+        "<i:placeOrderRequest><i:requestId>soap-repeat</i:requestId><i:customer>Buyer</i:customer><i:lines><i:sku>SOAP-RETRY</i:sku><i:quantity>2</i:quantity></i:lines></i:placeOrderRequest>";
+    assertThat(soap(body).getStatusCode().value()).isEqualTo(200);
+    assertThat(soap(body).getStatusCode().value()).isEqualTo(200);
+    assertThat(service.orders()).hasSize(1);
+    assertThat(service.product("SOAP-RETRY").quantity()).isEqualTo(8);
+    assertThat(soap(body.replace("<i:quantity>2", "<i:quantity>3")).getBody()).contains("CONFLICT");
+  }
+
+  @Test
+  void soapCannotBypassSalesPermissions() throws Exception {
+    product("A", 10);
+    String password = "Test-sales-123";
+    db.update("DELETE FROM app_users WHERE username='soap-sales'");
+    db.update(
+        "INSERT INTO app_users VALUES (?,?,?)",
+        "soap-sales",
+        new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder().encode(password),
+        "SALES");
+    String auth =
+        "Basic " + Base64.getEncoder().encodeToString(("soap-sales:" + password).getBytes());
+    var client = java.net.http.HttpClient.newHttpClient();
+    var csrfResponse =
+        client.send(
+            java.net.http.HttpRequest.newBuilder(
+                    java.net.URI.create("http://localhost:" + port + "/api/csrf"))
+                .header("Authorization", auth)
+                .GET()
+                .build(),
+            java.net.http.HttpResponse.BodyHandlers.ofString());
+    var token = new com.fasterxml.jackson.databind.ObjectMapper().readTree(csrfResponse.body());
+    String xml =
+        "<s:Envelope xmlns:s='http://schemas.xmlsoap.org/soap/envelope/'"
+            + " xmlns:i='https://stockbridge.example/inventory/v1'><s:Body><i:restockProductRequest><i:sku>A</i:sku><i:quantity>2</i:quantity></i:restockProductRequest></s:Body></s:Envelope>";
+    var response =
+        client.send(
+            java.net.http.HttpRequest.newBuilder(
+                    java.net.URI.create("http://localhost:" + port + "/ws"))
+                .header("Authorization", auth)
+                .header("Content-Type", "text/xml")
+                .header(
+                    "Cookie",
+                    csrfResponse.headers().firstValue("set-cookie").orElseThrow().split(";", 2)[0])
+                .header(token.get("headerName").asText(), token.get("token").asText())
+                .POST(java.net.http.HttpRequest.BodyPublishers.ofString(xml))
+                .build(),
+            java.net.http.HttpResponse.BodyHandlers.ofString());
+    assertThat(response.statusCode()).isIn(403, 500);
+    assertThat(service.product("A").quantity()).isEqualTo(10);
+    assertThat(service.movements()).hasSize(1);
   }
 }

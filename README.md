@@ -2,6 +2,20 @@
 
 **A working inventory and order management application built on the original Spring SOAP starter.**
 
+## StockBridge 1.1 updates
+
+This working copy adds login and roles, supplier and purchase-order management, a replenishment screen, and duplicate customer-order protection. See [the upgrade guide](docs/09-upgrade-guide.md) for setup, permissions, API changes, and limitations.
+
+On first startup, set `STOCKBRIDGE_ADMIN_PASSWORD` to your own 12–72 byte password (at least 12 characters). Sign in as `admin`, then use **Team access** to create staff accounts. Existing products and orders are retained; startup adds new database tables. Back up `data/` while the app is stopped before upgrading an existing workspace.
+
+```bash
+read -r -s -p "Initial admin password: " STOCKBRIDGE_ADMIN_PASSWORD; echo
+export STOCKBRIDGE_ADMIN_PASSWORD
+bash scripts/run-online.sh
+```
+
+The password is used only when the database has no user accounts. There is no default login. Test credentials belong only to automated tests.
+
 Manage a product catalogue, reserve stock through multi-line orders, cancel orders safely, and inspect every stock movement. A browser dashboard and a contract-first SOAP service use the same transactional business logic.
 
 ![StockBridge dashboard](docs/images/dashboard.png)
@@ -16,7 +30,7 @@ No Java, Maven, Docker or GitHub Desktop installation on your Mac is required. J
 4. Run `bash mvnw --batch-mode clean verify` for tests.
 5. Stop the Codespace when finished and reuse it next time.
 
-**All 19 tests passed in GitHub Codespaces with Java 17.** See [cloud evidence](docs/evidence/cloud-build-summary.txt).
+**The original 19 tests passed in GitHub Codespaces with Java 17. The upgrade adds tests and is verified locally; see the upgrade validation report.** See [cloud evidence](docs/evidence/cloud-build-summary.txt).
 
 [Analysis](docs/01-analysis.md) · [Design](docs/02-design.md) · [Demo script](docs/04-demo.md) · [Results](docs/06-results.md)
 
@@ -65,7 +79,7 @@ The database is saved in the workspace data folder and is not committed. The Mac
 
 ## Scope and provenance
 
-This is a local portfolio/learning application, with one demo warehouse and CAD prices. It has no authentication, payments, tax calculation, shipping or production deployment. Inventory value uses selling prices, not accounting cost. Confirmed order value is not recognised revenue. Order placement is not idempotent: re-sending a successful request can create another order.
+This is a local portfolio/learning application, with one demo warehouse and CAD prices. It has local username/password authentication and role permissions, but no payments, tax calculation, shipping or production deployment. Inventory value uses selling prices, not accounting cost. Confirmed order value is not recognised revenue. Order placement requires a request ID: reuse it for retries to return the same order without reserving stock again. A new ID intentionally creates a new order.
 
 The starter came from [zahir-imt/spring-soap-project](https://github.com/zahir-imt/spring-soap-project), whose history is preserved in this working copy. Its stated Spring Boot 3.x, contract generation and Cucumber direction is retained. The public demo WSDL in the starter README is replaced by a self-contained inventory contract so this demo and its tests do not depend on an outside service. This is an implementation choice, not a claim that Mr Zahir assigned this business domain. The original public demo service is not called by this version.
 

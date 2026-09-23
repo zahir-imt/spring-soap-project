@@ -30,6 +30,11 @@ public class InventorySteps {
 
   @Before
   public void clean() {
+    com.example.springsoap.AuthenticatedHttp.configure(http);
+    db.update("DELETE FROM order_requests");
+    db.update("DELETE FROM purchase_lines");
+    db.update("DELETE FROM purchase_orders");
+    db.update("DELETE FROM suppliers");
     db.update("DELETE FROM stock_movements");
     db.update("DELETE FROM order_lines");
     db.update("DELETE FROM customer_orders");
@@ -61,7 +66,9 @@ public class InventorySteps {
   public void order(int n) {
     response =
         soap(
-            "<i:placeOrderRequest><i:customer>BDD"
+            "<i:placeOrderRequest><i:requestId>"
+                + java.util.UUID.randomUUID()
+                + "</i:requestId><i:customer>BDD"
                 + " customer</i:customer><i:lines><i:sku>BDD</i:sku><i:quantity>"
                 + n
                 + "</i:quantity></i:lines></i:placeOrderRequest>");

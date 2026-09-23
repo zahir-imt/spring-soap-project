@@ -131,6 +131,25 @@ public class InventoryRepository {
         .toList();
   }
 
+  public String previousRequest(String key, String payload) {
+    db.queryForObject("SELECT id FROM order_request_lock WHERE id=1 FOR UPDATE", Integer.class);
+    var found =
+        db.queryForList("SELECT payload,order_id FROM order_requests WHERE request_id=?", key);
+    if (found.isEmpty()) return null;
+    String stored =
+        db.queryForObject(
+            "SELECT payload FROM order_requests WHERE request_id=?", String.class, key);
+    if (!payload.equals(stored))
+      throw new BusinessException(
+          "CONFLICT",
+          "This request ID was already used for different order details. Start a new order.");
+    return (String) found.get(0).get("ORDER_ID");
+  }
+
+  public void saveRequest(String key, String payload, String orderId) {
+    db.update("INSERT INTO order_requests VALUES (?,?,?)", key, payload, orderId);
+  }
+
   public void cancel(String id) {
     db.update("UPDATE customer_orders SET status='CANCELLED' WHERE id=?", id);
   }
