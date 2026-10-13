@@ -39,3 +39,12 @@ SESSION_COOKIE_SECURE = bool(cloud) or os.environ.get('SLOTRELAY_SECURE') == '1'
 CSRF_COOKIE_SECURE = SESSION_COOKIE_SECURE
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
+
+# Log rejection reasons without form contents or credentials.
+LOGGING = {'version': 1, 'disable_existing_loggers': False, 'handlers': {'console': {'class': 'logging.StreamHandler'}}, 'loggers': {'django.security.csrf': {'handlers': ['console'], 'level': 'WARNING', 'propagate': False}}}
+CSRF_FAILURE_VIEW = 'booking.views.csrf_failure'
+
+# Codespaces rewrites the browser Origin to its loopback upstream.
+# Trust only this exact development origin, and only inside Codespaces.
+if cloud:
+    CSRF_TRUSTED_ORIGINS.append('http://localhost:8000')

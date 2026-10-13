@@ -109,3 +109,13 @@ def action(request,kind,pk):
     except (Slot.DoesNotExist,Booking.DoesNotExist,WaitEntry.DoesNotExist): raise Http404
     except RuleError as e: messages.error(request,str(e))
     return redirect('business' if kind=='cancel-slot' else 'dashboard')
+
+def csrf_failure(request, reason=''):
+    # Never replay a rejected POST or echo submitted credentials.
+    from django.views.decorators.csrf import requires_csrf_token
+    from django.views.decorators.cache import never_cache
+    @never_cache
+    @requires_csrf_token
+    def recovery(request):
+        return render(request, 'csrf_failure.html', status=403)
+    return recovery(request)

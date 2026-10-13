@@ -11,3 +11,7 @@ Validated in GitHub Codespaces on 2026-10-13. No development runtime was install
 - StockBridge working copy retains its prior scripts/run-online.sh modification and cloud-finalize.py. Only SlotRelay and its own CI workflow are committed here.
 
 This is a private Codespaces preview, not permanent public hosting. Payments, email/SMS, account recovery, external calendars and business verification are not implemented.
+
+## Signup CSRF regression (2026-10-13)
+
+The live Codespaces proxy sent `Origin: http://localhost:8000`, which was rejected by Django. The exact loopback origin is now trusted only when `CODESPACE_NAME` is set. CSRF token and cookie checks remain enabled. Added tests for real token-based signup, public HTTPS origin, hostile origin, missing cookie recovery, and mismatched token rejection. Rejections show a safe recovery page and log the reason without form credentials.
