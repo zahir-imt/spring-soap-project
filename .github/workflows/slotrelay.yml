@@ -1,0 +1,26 @@
+name: SlotRelay checks
+on:
+  push:
+    branches: [codex/slotrelay]
+    paths: ['slotrelay/**', '.github/workflows/slotrelay.yml']
+  pull_request:
+    paths: ['slotrelay/**', '.github/workflows/slotrelay.yml']
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: slotrelay
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - run: python manage.py collectstatic --noinput
+      - run: python manage.py check
+      - run: python manage.py makemigrations --check --dry-run
+      - run: python manage.py test booking
+      - run: python scripts/check_concurrency.py
