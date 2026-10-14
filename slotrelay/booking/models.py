@@ -28,6 +28,7 @@ class Booking(models.Model):
     customer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     created = models.DateTimeField(auto_now_add=True)
     active = models.BooleanField(default=True)
+    rescheduled_to = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL, related_name='rescheduled_from')
     class Meta:
         constraints = [models.UniqueConstraint(fields=['slot'], condition=Q(active=True), name='one_active_booking')]
 

@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="section">
+<div class="section-heading"><div><p class="eyebrow">YOUR BUSINESS, AT A GLANCE</p><h1>Calendar &amp; analytics</h1><p class="lede">{{ business.name }} · {{ start|date:'M j' }}–{{ last|date:'M j, Y' }}</p></div><a href="{% url 'business' %}">Back to business dashboard ↗</a></div>
+<form method="get" class="calendar-controls panel">
+<div><label for="calendar-date">Date</label><input id="calendar-date" type="date" name="date" value="{{ selected }}" min="1900-01-01" max="2100-12-31" required></div>
+<div><label for="calendar-view">View</label><select id="calendar-view" name="view"><option value="week" {% if mode == 'week' %}selected{% endif %}>Week</option><option value="day" {% if mode == 'day' %}selected{% endif %}>Day</option></select></div>
+<button type="submit" class="button">Show appointments</button>
+</form>
+<nav class="calendar-nav" aria-label="Calendar dates"><a href="?date={{ previous }}&amp;view={{ mode }}">← Previous {{ mode }}</a><a href="?date={{ today }}&amp;view={{ mode }}">Today</a><a href="?date={{ next }}&amp;view={{ mode }}">Next {{ mode }} →</a></nav>
+<h2>This {{ mode }} in numbers</h2>
+<p class="muted">Based on appointment dates in Toronto time, including past appointments. Figures describe booking records, not attendance or collected revenue.</p>
+<div class="analytics-grid">
+<div class="panel"><p>Confirmed bookings</p><strong>{{ stats.confirmed }}</strong></div>
+<div class="panel"><p>Cancelled bookings</p><strong>{{ stats.cancelled }}</strong><p class="micro">Customer or business cancellations; excludes reschedules.</p></div>
+<div class="panel"><p>Rescheduled from this period</p><strong>{{ stats.rescheduled }}</strong></div>
+<div class="panel"><p>Accepted waitlist offers</p><strong>{{ stats.waitlist }}</strong><p class="micro">Historical acceptances, even if later cancelled.</p></div>
+<div class="panel"><p>Confirmed booking value</p><strong>${{ stats.value|floatformat:2 }} CAD</strong><p class="micro">Listed prices, not collected revenue.</p></div>
+</div>
+<h2>Appointment calendar</h2><p class="muted">All times are Toronto time. Customer details are visible only to your business.</p>
+<div class="calendar-grid {% if mode == 'day' %}single-day{% endif %}">
+{% for day in groups %}<section class="calendar-day panel"><h3>{{ day.date|date:'D, M j' }}</h3>
+{% for slot in day.slots %}<article class="calendar-appointment"><p><strong>{{ slot.starts|date:'g:i A' }}</strong> · {{ slot.duration }} min</p><h4>{{ slot.service }}</h4><p>${{ slot.price }} CAD</p>
+<span class="badge">{% if slot.cancelled %}Cancelled{% elif slot.confirmed %}Booked{% elif slot.held %}Waitlist offer{% elif slot.starts <= now %}Past opening{% else %}Available{% endif %}</span>
+{% for booking in slot.confirmed %}<p>Customer: {{ booking.customer.username }}</p>{% endfor %}</article>
+{% empty %}<p class="muted">No appointments.</p>{% endfor %}</section>{% endfor %}
+</div></section>
+{% endblock %}

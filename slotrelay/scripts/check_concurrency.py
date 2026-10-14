@@ -19,7 +19,7 @@ def main():
         from django.utils import timezone
         from datetime import timedelta
         from booking.models import Business,Slot,Booking
-        from booking.services import book,RuleError
+        from booking.services import book,reschedule_booking,RuleError
         call_command('migrate',verbosity=0)
         owner=User.objects.create_user('race-owner')
         a=User.objects.create_user('race-a')
@@ -42,5 +42,28 @@ def main():
         assert sorted(results)==['booked','rejected'],results
         assert Booking.objects.filter(slot=slot,active=True).count()==1
         connections.close_all()
+        original_slot=Slot.objects.create(business=business,service='Reschedule race',starts=timezone.now()+timedelta(days=2),duration=30,price=10)
+        target=Slot.objects.create(business=business,service='Reschedule race',starts=timezone.now()+timedelta(days=3),duration=30,price=10)
+        original=book(original_slot.pk,a)
+        barrier=Barrier(2)
+        def race(kind):
+            try:
+                user=User.objects.get(pk=a.pk if kind=='move' else b.pk)
+                barrier.wait(timeout=10)
+                if kind=='move': reschedule_booking(original.pk,target.pk,user)
+                else: book(target.pk,user)
+                return kind
+            except RuleError:
+                return 'rejected'
+            finally:
+                connections.close_all()
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            results=list(pool.map(race,['move','book']))
+        assert results.count('rejected')==1,results
+        assert Booking.objects.filter(slot=target,active=True).count()==1
+        original.refresh_from_db()
+        assert original.active == ('book' in results),results
+        connections.close_all()
+        print('PASS: reschedule versus booking race preserves one target booking and the correct original state.')
         print('PASS: two simultaneous booking attempts, exactly one confirmed booking.')
 if __name__=='__main__': main()

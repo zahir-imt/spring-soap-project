@@ -90,3 +90,25 @@ def cancel_slot(slot_id, user):
     WaitEntry.objects.filter(slot=slot,status__in=['waiting','offered']).update(status='expired')
     slot.cancelled = True
     slot.save()
+
+@transaction.atomic
+def reschedule_booking(booking_id, target_id, user):
+    original = Booking.objects.select_for_update().select_related('slot').get(pk=booking_id, customer=user)
+    slots = {s.pk: s for s in Slot.objects.select_for_update().filter(pk__in=[original.slot_id, target_id]).order_by('pk')}
+    source = slots[original.slot_id]
+    target = slots.get(target_id)
+    if not original.active or source.cancelled or source.starts <= timezone.now():
+        raise RuleError('Only a confirmed future appointment can be rescheduled.')
+    if not target or target.pk == source.pk:
+        raise RuleError('Choose a different available appointment.')
+    if (target.business_id, target.service, target.duration) != (source.business_id, source.service, source.duration):
+        raise RuleError('Choose the same service and duration at the same business.')
+    # Reserve the replacement first. Any failure rolls back the whole change.
+    replacement = book(target.pk, user)
+    original.active = False
+    original.rescheduled_to = replacement
+    original.save(update_fields=['active', 'rescheduled_to'])
+    rotate(source)
+    notify(user, f'Your appointment for {source.service} was rescheduled. See your new time in My appointments.')
+    notify(source.business.owner, f'A customer rescheduled {source.service}. The original time is available to the waitlist.')
+    return replacement

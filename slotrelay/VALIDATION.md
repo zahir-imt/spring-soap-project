@@ -15,3 +15,10 @@ This is a private Codespaces preview, not permanent public hosting. Payments, em
 ## Signup CSRF regression (2026-10-13)
 
 The live Codespaces proxy sent `Origin: http://localhost:8000`, which was rejected by Django. The exact loopback origin is now trusted only when `CODESPACE_NAME` is set. CSRF token and cookie checks remain enabled. Added tests for real token-based signup, public HTTPS origin, hostile origin, missing cookie recovery, and mismatched token rejection. Rejections show a safe recovery page and log the reason without form credentials.
+
+## Calendar and rescheduling update (2026-10-14)
+
+- 44 Django tests passed, including 14 new workflow tests for reschedule ownership, CSRF, rollback, unavailable targets, same-service restrictions, FIFO offers, history, calendar owner isolation, period analytics, invalid dates and Toronto midnight boundaries.
+- Disposable file-backed SQLite concurrency checks passed for competing bookings and rescheduling versus booking the same target; exactly one target booking survives, and a failed reschedule keeps the original.
+- Django system checks and migration-drift checks passed. Existing cloud database backed up before applying migration 0002.
+- Screen responses are covered by Django HTTP tests; live browser review is pending preview reconnection.
