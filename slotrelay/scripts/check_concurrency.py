@@ -66,4 +66,41 @@ def main():
         connections.close_all()
         print('PASS: reschedule versus booking race preserves one target booking and the correct original state.')
         print('PASS: two simultaneous booking attempts, exactly one confirmed booking.')
+        from django import forms
+        from booking.models import Staff, WaitEntry
+        from booking.forms import BatchSlotForm, save_batch
+        from booking.services import join_flexible, cancel_booking
+        staff = Staff.objects.create(business=business,name='Race staff')
+        start = timezone.localtime().replace(hour=10,minute=0,second=0,microsecond=0)+timedelta(days=7)
+        barrier = Barrier(2)
+        def publish(_):
+            try:
+                form = BatchSlotForm({'service':'Batch race','staff':staff.pk,'starts':start.strftime('%Y-%m-%dT%H:%M'),'duration':30,'price':20,'count':3,'gap':0},business=business)
+                assert form.is_valid(), form.errors
+                barrier.wait(timeout=10)
+                save_batch(form,business)
+                return 'published'
+            except forms.ValidationError:
+                return 'rejected'
+            finally: connections.close_all()
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            results = list(pool.map(publish,[1,2]))
+        assert sorted(results)==['published','rejected'], results
+        assert Slot.objects.filter(service='Batch race').count()==3
+        print('PASS: simultaneous overlapping batches create exactly one complete batch.')
+        one = Slot.objects.create(business=business,service='Flex race',starts=start+timedelta(days=2),duration=30,price=20)
+        two = Slot.objects.create(business=business,service='Flex race',starts=start+timedelta(days=3),duration=30,price=20)
+        reservations = [book(slot.pk,a) for slot in [one,two]]
+        group = join_flexible(b,business,'Flex race',one.starts,two.starts,20)
+        barrier = Barrier(2)
+        def release(pk):
+            try:
+                barrier.wait(timeout=10)
+                cancel_booking(pk,a)
+            finally: connections.close_all()
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            list(pool.map(release,[reservation.pk for reservation in reservations]))
+        assert WaitEntry.objects.filter(flexible=group,status='offered').count()==1
+        print('PASS: simultaneous cancellations hold only one offer per flexible group.')
+        connections.close_all()
 if __name__=='__main__': main()

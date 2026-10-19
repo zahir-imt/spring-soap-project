@@ -12,7 +12,7 @@ from .services import refresh_offers, reschedule_booking, RuleError
 class AppointmentChoice(forms.ModelChoiceField):
     def label_from_instance(self, slot):
         start = timezone.localtime(slot.starts).strftime('%a, %b %d, %Y at %I:%M %p')
-        return f'{start} — ${slot.price} CAD — {slot.duration} minutes'
+        return f'{start} — ${slot.price} CAD — {slot.duration} minutes — {slot.staff.name if slot.staff else "Unassigned staff"}'
 
 class RescheduleForm(forms.Form):
     appointment = AppointmentChoice(queryset=Slot.objects.none(), empty_label='Choose a new time', label='New appointment (Toronto time)')
@@ -26,7 +26,7 @@ def reschedule(request, pk):
         return redirect('dashboard')
     refresh_offers()
     source = booking.slot
-    choices = Slot.objects.filter(business=source.business, service=source.service, duration=source.duration, starts__gt=timezone.now(), cancelled=False).exclude(pk=source.pk).annotate(taken=Exists(Booking.objects.filter(slot=OuterRef('pk'), active=True)), reserved=Exists(WaitEntry.objects.filter(slot=OuterRef('pk'), status='offered').exclude(customer=request.user))).filter(taken=False, reserved=False)
+    choices = Slot.objects.select_related('staff').filter(business=source.business, service=source.service, duration=source.duration, starts__gt=timezone.now(), cancelled=False).exclude(pk=source.pk).annotate(taken=Exists(Booking.objects.filter(slot=OuterRef('pk'), active=True)), reserved=Exists(WaitEntry.objects.filter(slot=OuterRef('pk'), status='offered').exclude(customer=request.user))).filter(taken=False, reserved=False)
     form = RescheduleForm(request.POST if request.method == 'POST' else None)
     form.fields['appointment'].queryset = choices
     if request.method == 'POST' and form.is_valid():

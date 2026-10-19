@@ -8,3 +8,16 @@ urlpatterns += [
     path('bookings/<int:pk>/reschedule/', workspace_views.reschedule, name='reschedule'),
     path('business/calendar/', workspace_views.business_calendar, name='business-calendar'),
 ]
+
+from booking import upgrade_views
+urlpatterns += [
+    path('business/staff/', upgrade_views.staff, name='staff'),
+    path('business/staff/<int:pk>/toggle/', upgrade_views.staff_toggle, name='staff-toggle'),
+    path('business/batch/', upgrade_views.batch, name='batch'),
+    path('waitlist/flexible/', upgrade_views.flexible, name='flexible'),
+    path('waitlist/flexible/<int:pk>/close/', upgrade_views.flexible_close, name='flexible-close'),
+    path('notifications/', upgrade_views.inbox, name='inbox'),
+    path('notifications/<int:pk>/read/', upgrade_views.notice_read, name='notice-read'),
+    path('notifications/read-all/', upgrade_views.notices_read, name='notices-read'),
+    path('bookings/<int:pk>/calendar.ics', upgrade_views.calendar_export, name='calendar-export'),
+]

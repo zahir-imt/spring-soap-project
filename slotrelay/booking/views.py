@@ -17,7 +17,7 @@ from .services import refresh_offers, book, join_waitlist, cancel_booking, leave
 
 def explore(request):
     refresh_offers()
-    slots = Slot.objects.filter(cancelled=False,starts__gt=timezone.now()).select_related('business').annotate(taken=Exists(Booking.objects.filter(slot=OuterRef('pk'),active=True)), held=Exists(WaitEntry.objects.filter(slot=OuterRef('pk'),status='offered')))
+    slots = Slot.objects.filter(cancelled=False,starts__gt=timezone.now()).select_related('business','staff').annotate(taken=Exists(Booking.objects.filter(slot=OuterRef('pk'),active=True)), held=Exists(WaitEntry.objects.filter(slot=OuterRef('pk'),status='offered')))
     q = request.GET.get('q','').strip()[:100]
     category = request.GET.get('category','')
     city = request.GET.get('city','').strip()[:80]
@@ -59,9 +59,9 @@ def signin(request):
 def dashboard(request):
     refresh_offers()
     business = Business.objects.filter(owner=request.user).first()
-    bookings = Booking.objects.filter(customer=request.user).select_related('slot__business').order_by('-slot__starts')[:50]
-    waiting = WaitEntry.objects.filter(customer=request.user,status__in=['waiting','offered']).select_related('slot__business')
-    return render(request,'dashboard.html',{'bookings':bookings,'waiting':waiting,'notices':Notice.objects.filter(user=request.user)[:12],'business':business,'now':timezone.now()})
+    bookings = Booking.objects.filter(customer=request.user).select_related('slot__business','slot__staff').order_by('-slot__starts')[:50]
+    waiting = WaitEntry.objects.filter(customer=request.user,status__in=['waiting','offered']).select_related('slot__business','slot__staff')
+    return render(request,'dashboard.html',{'flexible_groups':request.user.flexiblewaitlist_set.filter(active=True).select_related('business'),'bookings':bookings,'waiting':waiting,'notices':Notice.objects.filter(user=request.user)[:12],'business':business,'now':timezone.now()})
 
 @login_required
 def business_edit(request):
@@ -79,7 +79,7 @@ def business_edit(request):
 def business_dashboard(request):
     business = Business.objects.filter(owner=request.user).first()
     if not business: return redirect('business-edit')
-    slots = Slot.objects.filter(business=business).annotate(taken=Exists(Booking.objects.filter(slot=OuterRef('pk'),active=True))).order_by('-starts')[:100]
+    slots = Slot.objects.filter(business=business).select_related('staff').annotate(taken=Exists(Booking.objects.filter(slot=OuterRef('pk'),active=True))).order_by('-starts')[:100]
     bookings = Booking.objects.filter(slot__business=business,active=True).select_related('slot','customer').order_by('slot__starts')[:100]
     total = Booking.objects.filter(slot__business=business,active=True).aggregate(total=Sum('slot__price'))['total'] or 0
     return render(request,'business.html',{'business':business,'slots':slots,'bookings':bookings,'value':total,'now':timezone.now()})
@@ -87,7 +87,7 @@ def business_dashboard(request):
 @login_required
 def slot_new(request):
     business=get_object_or_404(Business,owner=request.user)
-    form=SlotForm(request.POST or None)
+    form=SlotForm(request.POST or None,business=business)
     if request.method == 'POST' and form.is_valid():
         try:
             save_slot(form,business)
@@ -96,7 +96,7 @@ def slot_new(request):
         else:
             messages.success(request,'Your appointment is now listed.')
             return redirect('business')
-    return render(request,'form.html',{'form':form,'title':'Turn an opening into an opportunity.','eyebrow':'PUBLISH AN APPOINTMENT','button':'Publish appointment','note':'All prices are CAD. Dates are shown in America/Toronto time. One appointment at a time per business.'})
+    return render(request,'form.html',{'form':form,'title':'Turn an opening into an opportunity.','eyebrow':'PUBLISH AN APPOINTMENT','button':'Publish appointment','note':'All prices are CAD. Dates are shown in America/Toronto time. Appointments may overlap only for different staff. Unassigned appointments reserve the whole business.'})
 
 @login_required
 @require_POST

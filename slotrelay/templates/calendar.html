@@ -20,7 +20,7 @@
 <h2>Appointment calendar</h2><p class="muted">All times are Toronto time. Customer details are visible only to your business.</p>
 <div class="calendar-grid {% if mode == 'day' %}single-day{% endif %}">
 {% for day in groups %}<section class="calendar-day panel"><h3>{{ day.date|date:'D, M j' }}</h3>
-{% for slot in day.slots %}<article class="calendar-appointment"><p><strong>{{ slot.starts|date:'g:i A' }}</strong> · {{ slot.duration }} min</p><h4>{{ slot.service }}</h4><p>${{ slot.price }} CAD</p>
+{% for slot in day.slots %}<article class="calendar-appointment"><p><strong>{{ slot.starts|date:'g:i A' }}</strong> · {{ slot.duration }} min</p><h4>{{ slot.service }}</h4><p class="micro">{{ slot.staff.name|default:"Unassigned staff" }}</p><p>${{ slot.price }} CAD</p>
 <span class="badge">{% if slot.cancelled %}Cancelled{% elif slot.confirmed %}Booked{% elif slot.held %}Waitlist offer{% elif slot.starts <= now %}Past opening{% else %}Available{% endif %}</span>
 {% for booking in slot.confirmed %}<p>Customer: {{ booking.customer.username }}</p>{% endfor %}</article>
 {% empty %}<p class="muted">No appointments.</p>{% endfor %}</section>{% endfor %}
