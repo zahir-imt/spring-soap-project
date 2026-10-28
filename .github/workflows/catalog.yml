@@ -1,0 +1,18 @@
+name: Catalogue browser logic
+on:
+  push:
+    paths: ['src/main/resources/static/**', 'scripts/tests/**', '.github/workflows/catalog.yml']
+  pull_request:
+    paths: ['src/main/resources/static/**', 'scripts/tests/**', '.github/workflows/catalog.yml']
+permissions:
+  contents: read
+jobs:
+  catalog:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check src/main/resources/static/app.js
+      - run: node scripts/tests/catalog.test.cjs

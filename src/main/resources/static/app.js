@@ -19,7 +19,15 @@ function notice(message,error=false){const n=$('#notice');n.textContent=message;
 function table(headers,rows,empty='No records yet.'){return rows.length?`<div class="table-wrap"><table><thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table></div>`:`<div class="empty">${empty}</div>`;}
 function stockBadge(p){return p.quantity===0?'<span class="badge red">Out of stock</span>':p.quantity<=p.reorderLevel?'<span class="badge amber">Low stock</span>':'<span class="badge">In stock</span>';}
 function orderRows(orders){return orders.map(o=>`<tr><td><strong>#${esc(o.id.slice(0,8).toUpperCase())}</strong><small>${new Date(o.createdAt).toLocaleString()}</small></td><td>${esc(o.customer)}</td><td>${o.lines.reduce((n,l)=>n+l.quantity,0)} units</td><td><strong>${money(o.total)}</strong></td><td><span class="badge ${o.status==='CANCELLED'?'grey':''}">${o.status==='CANCELLED'?'Cancelled':'Confirmed'}</span></td><td><button class="text-button" data-order="${esc(o.id)}">Details →</button></td></tr>`);}
-function renderProducts(){const q=$('#search').value.toLowerCase();const ps=state.products.filter(p=>`${p.name} ${p.sku} ${p.category}`.toLowerCase().includes(q));$('#product-table').innerHTML=table(['Product','Category','Unit price','Stock','Status',''],ps.map(p=>`<tr><td><strong>${esc(p.name)}</strong><small>${esc(p.sku)}</small></td><td>${esc(p.category)}</td><td>${money(p.price)}</td><td><strong>${p.quantity}</strong><small>Reorder at ${p.reorderLevel}</small></td><td>${stockBadge(p)}</td><td><button class="text-button" data-restock="${esc(p.sku)}">+ Restock</button></td></tr>`),'No matching products.');}
+function filteredProducts(){return catalogTools.select(state.products,{query:$('#search').value,category:$('#catalog-category').value,stock:$('#catalog-stock').value,sort:$('#catalog-sort').value});}
+function renderProducts(){
+ const category=$('#catalog-category'), selected=category.value;
+ category.replaceChildren(new Option('All categories',''),...[...new Set(state.products.map(p=>p.category))].sort().map(name=>new Option(name,name)));
+ category.value=selected;
+ const ps=filteredProducts(), totals=catalogTools.summary(ps);
+ $('#catalog-summary').textContent=totals.count+' of '+state.products.length+' products · '+totals.units+' units · '+money(totals.value)+' at selling prices';
+ $('#catalog-export').disabled=!ps.length;
+ $('#product-table').innerHTML=table(['Product','Category','Unit price','Stock','Status',''],ps.map(p=>`<tr><td><strong>${esc(p.name)}</strong><small>${esc(p.sku)}</small></td><td>${esc(p.category)}</td><td>${money(p.price)}</td><td><strong>${p.quantity}</strong><small>Reorder at ${p.reorderLevel}</small></td><td>${stockBadge(p)}</td><td><button class="text-button" data-restock="${esc(p.sku)}">+ Restock</button></td></tr>`),'No matching products.');}
 function render(){const s=state.summary;$('#metrics').innerHTML=[['Total products',s.products,'Across your catalogue','▦'],['Available units',s.units,'Ready to fulfil orders','◫'],['Inventory value',money(s.inventoryValue),'At catalogue selling prices','↗'],['Confirmed orders',s.activeOrders,`${money(s.orderValue)} in order value`,'▤']].map(m=>`<article class="metric"><div class="metric-label">${m[0]}<span class="metric-icon">${m[3]}</span></div><strong>${m[1]}</strong><small>${m[2]}</small></article>`).join('');
  const max=Math.max(1,...state.products.map(p=>p.quantity));$('#stock-chart').innerHTML=state.products.slice(0,8).map(p=>`<div class="bar-row"><span class="bar-label" title="${esc(p.name)}">${esc(p.name)}</span><div class="bar-track"><div class="bar-fill ${p.quantity<=p.reorderLevel?'low':''}" style="width:${p.quantity/max*100}%"></div></div><span class="bar-num">${p.quantity}</span></div>`).join('')||'<div class="empty">Add a product to begin.</div>';
  const low=state.products.filter(p=>p.quantity<=p.reorderLevel);$('#attention-count').textContent=low.length;$('#attention').innerHTML=low.slice(0,4).map(p=>`<div class="attention-row"><span class="product-icon">▦</span><div class="attention-info"><strong>${esc(p.name)}</strong><small>${p.quantity} available · minimum ${p.reorderLevel}</small></div><button class="text-button" data-restock="${esc(p.sku)}">Restock ↗</button></div>`).join('')||'<div class="empty">All products are above their reorder levels.</div>';
@@ -76,3 +84,12 @@ function purchaseDetails(id){const p=state.purchases.find(p=>p.id===id);modal('P
  if(p.status==='ORDERED')$('#cancel-purchase').onclick=()=>modal('Cancel purchase order?','<p class="dialog-note">This closes the outstanding purchase without changing stock.</p>',()=>post('/purchases/'+id+'/cancel',{}),'Cancel purchase');
 }
 document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.purchaseSku)purchaseForm(b.dataset.purchaseSku);if(b.dataset.purchase)purchaseDetails(b.dataset.purchase);});
+
+for(const id of ['catalog-category','catalog-stock','catalog-sort']) $('#'+id).onchange=()=>{renderProducts();applyPermissions();};
+$('#catalog-reset').onclick=()=>{$('#search').value='';$('#catalog-category').value='';$('#catalog-stock').value='';$('#catalog-sort').value='name';renderProducts();applyPermissions();};
+$('#catalog-export').onclick=()=>{
+ const products=filteredProducts();if(!products.length)return;
+ const url=URL.createObjectURL(new Blob([catalogTools.csv(products)],{type:'text/csv;charset=utf-8'}));
+ const link=document.createElement('a');link.href=url;link.download='stockbridge-catalog-'+new Date().toISOString().slice(0,10)+'.csv';document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+ notice('Exported '+products.length+' filtered products. Values reflect the loaded inventory snapshot.');
+};
