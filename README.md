@@ -86,3 +86,10 @@ The starter came from [zahir-imt/spring-soap-project](https://github.com/zahir-i
 Implementation assistance: OpenAI Codex. Review and understand the included explanation notes before presenting the project.
 
 References: [Spring SOAP documentation](https://docs.spring.io/spring-ws/docs/current/reference/html/), [Cucumber Java documentation](https://cucumber.io/docs/installation/java/).
+
+## Catalogue improvements — 2026-10-28
+Products now supports category and stock-status filters, sorting by name/quantity/price/stock value, and a summary of the filtered product count, units and value at selling prices. Low stock excludes zero-stock products, which have their own Out of stock filter. Reset filters clears search and filters.
+
+Export filtered CSV downloads exactly the visible filtered/sorted catalogue from the loaded snapshot, including SKU, product, category, CAD price, quantity, reorder level, status and value. Cells are quoted, and potentially executable spreadsheet formulas are prefixed with an apostrophe. The export does not change stock or bypass account permissions. Refresh the page to fetch a newer inventory snapshot.
+
+Cloud validation: Maven verify passes; JavaScript syntax and catalogue tests pass using node scripts/tests/catalog.test.cjs. The catalogue checks also run in GitHub Actions. No database schema changes.
