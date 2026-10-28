@@ -32,3 +32,6 @@ The live Codespaces proxy sent `Origin: http://localhost:8000`, which was reject
 - Cloud database backed up before migration 0003. System and migration checks passed; running preview returns HTTP 200.
 - Live signed-in browser review confirmed the dashboard and flexible waitlist form render. Business workflows are exercised by authenticated HTTP tests; the existing browser account has no business profile, so no test business was added to live data.
 - All code, database migration, application processes and test execution remained in GitHub Codespaces. No StockBridge source changes.
+
+## Discovery verification — 2026-10-28
+74 tests and all four concurrency checks passed in Codespaces. Coverage includes price zero, unavailable and held appointments, invalid filters, inclusive Toronto dates, business search, stable pagination, filter-preserving links and expired/cancelled listings. Live search controls rendered successfully with the existing account.

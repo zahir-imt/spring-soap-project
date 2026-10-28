@@ -98,3 +98,19 @@ class FlexibleWaitlistForm(forms.Form):
         if start and end and (start <= timezone.now() or end < start or end-start > timedelta(days=31)):
             raise forms.ValidationError('Choose a future window of up to 31 days, with the latest time after the earliest.')
         return data
+
+
+class ExploreForm(forms.Form):
+    q = forms.CharField(required=False,max_length=100,label='Service or business')
+    city = forms.CharField(required=False,max_length=80)
+    category = forms.ChoiceField(required=False,choices=[('', 'All categories')]+Business._meta.get_field('category').choices)
+    from_date = forms.DateField(required=False,widget=forms.DateInput(attrs={'type':'date'}),label='From date (Toronto)')
+    to_date = forms.DateField(required=False,widget=forms.DateInput(attrs={'type':'date'}),label='Through date (Toronto)')
+    max_price = forms.DecimalField(required=False,min_value=0,max_digits=8,decimal_places=2,label='Maximum price (CAD)')
+    availability = forms.ChoiceField(required=False,choices=[('', 'All appointments'),('open','Available to book'),('waitlist','Waitlist available')])
+    sort = forms.ChoiceField(required=False,choices=[('', 'Soonest first'),('price','Lowest price'),('-price','Highest price')],label='Sort by')
+    def clean(self):
+        data=super().clean()
+        if data.get('from_date') and data.get('to_date') and data['from_date'] > data['to_date']:
+            raise forms.ValidationError('The end date must be on or after the start date.')
+        return data

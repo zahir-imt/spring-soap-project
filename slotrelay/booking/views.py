@@ -6,25 +6,37 @@ from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.db import transaction
-from django.db.models import Exists, OuterRef, Sum
+from django.db.models import Exists, OuterRef, Sum, Q
+from django.core.paginator import Paginator
 from django.http import Http404
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 from .models import Business, Slot, Booking, WaitEntry, Notice, LoginAttempt
-from .forms import SignupForm, BusinessForm, SlotForm, save_slot
+from .forms import SignupForm, BusinessForm, SlotForm, save_slot, ExploreForm
 from .services import refresh_offers, book, join_waitlist, cancel_booking, leave_waitlist, cancel_slot, RuleError
 
 def explore(request):
     refresh_offers()
     slots = Slot.objects.filter(cancelled=False,starts__gt=timezone.now()).select_related('business','staff').annotate(taken=Exists(Booking.objects.filter(slot=OuterRef('pk'),active=True)), held=Exists(WaitEntry.objects.filter(slot=OuterRef('pk'),status='offered')))
-    q = request.GET.get('q','').strip()[:100]
-    category = request.GET.get('category','')
-    city = request.GET.get('city','').strip()[:80]
-    if q: slots = slots.filter(service__icontains=q)
-    if category: slots = slots.filter(business__category=category)
-    if city: slots = slots.filter(business__city__icontains=city)
-    return render(request,'explore.html',{'slots':slots[:100],'q':q,'city':city,'category':category,'categories':Business._meta.get_field('category').choices})
+    form = ExploreForm(request.GET)
+    if form.is_valid():
+        values=form.cleaned_data
+        if values['q']: slots=slots.filter(Q(service__icontains=values['q']) | Q(business__name__icontains=values['q']))
+        if values['city']: slots=slots.filter(business__city__icontains=values['city'])
+        if values['category']: slots=slots.filter(business__category=values['category'])
+        if values['from_date']: slots=slots.filter(starts__date__gte=values['from_date'])
+        if values['to_date']: slots=slots.filter(starts__date__lte=values['to_date'])
+        if values['max_price'] is not None: slots=slots.filter(price__lte=values['max_price'])
+        if values['availability']=='open': slots=slots.filter(taken=False,held=False)
+        elif values['availability']=='waitlist': slots=slots.filter(Q(taken=True) | Q(held=True))
+        slots=slots.order_by(*({'price':['price','starts','pk'],'-price':['-price','starts','pk']}.get(values['sort'],['starts','pk'])))
+    else:
+        slots=slots.none()
+    page=Paginator(slots,24).get_page(request.GET.get('page'))
+    params=request.GET.copy()
+    params.pop('page',None)
+    return render(request,'explore.html',{'slots':page,'page':page,'search_form':form,'filter_query':params.urlencode()})
 
 def signup(request):
     form = SignupForm(request.POST or None)

@@ -40,7 +40,7 @@ Tests use an isolated test database, not app data. They cover booking exclusivit
 Runtime data and a generated secret key stay under slotrelay/data/ and are ignored by Git. Back up that directory while stopped. Restarting the same Codespace preserves data; deleting the Codespace does not. Keep independent backups before deletion. The offer worker runs every 30 seconds; reading the marketplace/dashboard also refreshes offers.
 
 ## Scope and next steps
-This is an MVP for private preview, not a public production launch. No email/SMS delivery, payment processing, refunds, external calendar sync, email verification, self-service password recovery. In-app offers require customers to check their dashboard. Prices are CAD and all displayed appointments use America/Toronto. Browse and dashboard lists are capped at 100 and 50 items respectively. SQLite serializes writes using immediate transactions and a unique active-booking constraint. Before scaling, migrate to PostgreSQL, add pagination, monitoring, stronger abuse controls, account recovery, business verification, persistent hosting/backups and notification delivery. Account-level throttling can temporarily block a username after repeated failed attempts.
+This is an MVP for private preview, not a public production launch. No email/SMS delivery, payment processing, refunds, external calendar sync, email verification, self-service password recovery. In-app offers require customers to check their dashboard. Prices are CAD and all displayed appointments use America/Toronto. Explore results are paginated in groups of 24; the appointment dashboard shows the latest 50 bookings. SQLite serializes writes using immediate transactions and a unique active-booking constraint. Before scaling, migrate to PostgreSQL, add pagination, monitoring, stronger abuse controls, account recovery, business verification, persistent hosting/backups and notification delivery. Account-level throttling can temporarily block a username after repeated failed attempts.
 
 The public repository contains source only. Private Codespaces forwarding protects the preview; repository visibility is separate from application access. Do not expose this preview publicly as a production service.
 
@@ -61,3 +61,9 @@ The public repository contains source only. Private Codespaces forwarding protec
 5. **Notification inbox:** Updates shows the unread count. View all or unread notifications, paginate, and mark one or all as read. Delivery remains in-app only.
 
 Migration 0003 preserves accounts, bookings, waitlists and notices. Back up the database before upgrading. Existing notices initially appear unread. Run migrations, then restart both the web server and offer worker. Production use on PostgreSQL would require revisiting cross-slot flexible-offer locking; current concurrency guarantees are tested on SQLite IMMEDIATE transactions.
+
+
+## Discovery improvements — 2026-10-28
+Explore now searches service and business names and supports category, city, inclusive Toronto date range, maximum CAD price, availability and price/time sorting. Results are paginated 24 at a time with stable ordering and filter-preserving links. Invalid filters show validation messages instead of silently returning broad results. Reset filters restores the full list of upcoming appointments. Booked appointments and active waitlist holds are excluded from Available to book. No bookings or prices are changed by searching.
+
+Validation: 74 Django tests pass, including eight discovery tests, plus four SQLite concurrency checks. No schema changes. Existing fictional demo appointments may have passed; an empty upcoming list is not a server error.
