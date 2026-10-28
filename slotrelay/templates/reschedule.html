@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="form-layout">
+<aside><p class="eyebrow">A CHANGE OF PLANS</p><h1>Find a better time.</h1>
+<p class="lede">{{ booking.slot.service }} at {{ booking.slot.business.name }}</p>
+<p>Current appointment: <strong>{{ booking.slot.starts|date:'D, M j, Y · g:i A' }}</strong> Toronto time.</p>
+<p>{{ booking.slot.duration }} minutes · ${{ booking.slot.price }} CAD</p>
+<p>Your current booking stays confirmed until your new time is secured. The new appointment's displayed price applies.</p>
+<a href="{% url 'dashboard' %}">Keep my current appointment</a></aside>
+<div class="panel">{% if has_choices %}
+<form method="post">{% csrf_token %}{{ form.as_p }}<button class="button" type="submit">Confirm new time ↗</button></form>
+{% else %}<h2>No alternative times yet.</h2><p>There are no available appointments for this service and duration at this business. Your current booking is unchanged.</p>{% endif %}</div>
+</section>
+{% endblock %}
